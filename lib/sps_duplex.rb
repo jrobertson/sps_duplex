@@ -9,7 +9,7 @@ require 'sps-sub'
 class SPSDuplex
 
   def initialize(host: 'localhost', port: '55000', topic: 'chan1', 
-                 sub_topic: 'node1', pub_topic: 'node2')
+                 sub_topic: 'node1', pub_topic: 'node2', interactive: true)
 
         
     sps = SPSSub.new host: host, port: port, callback: self
@@ -17,12 +17,22 @@ class SPSDuplex
     sleep 1 # give it a second to connect
     
     topic_path = [topic]
-    Thread.new { sps.subscribe topic: (topic_path + [sub_topic]).join('/') }
-
-    @pub = SPSPub.new address: host, port: port
     
-    topic_path << pub_topic
-    @topic = topic_path.join('/')    
+    if interactive then
+      
+      Thread.new { sps.subscribe topic: (topic_path + [sub_topic]).join('/') }
+
+      @pub = SPSPub.new address: host, port: port
+      
+      topic_path << pub_topic
+      @topic = topic_path.join('/')    
+    else
+
+      @pub = sps      
+      @topic = (topic_path + [pub_topic]).join('/')         
+      sps.subscribe topic: (topic_path + [sub_topic]).join('/')
+      
+    end
 
   end
 
